@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pavanvora/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run pavanvora/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t pavanvora/multi-client ./client
+  - docker build -t pavanvora/multi-nginx ./nginx
+  - docker build -t pavanvora/multi-server ./server
+  - docker build -t pavanvora/multi-worker ./worker 
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push pavanvora/multi-client
+  - docker push pavanvora/multi-nginx
+  - docker push pavanvora/multi-server
+  - docker push pavanvora/multi-worker
